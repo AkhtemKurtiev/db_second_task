@@ -10,14 +10,16 @@ from xlrd import open_workbook
 from constants import SKIP_WORDS, URL
 from models.database import Session
 from models.spimex_trading_results import Spimex_trading_results
+from .service import string_to_date
 
 parse = True
 page = 1
 
 while parse:
 
-    url = URL + f'{page}'
+    url: str = URL + f'{page}'
     print(url)
+
     try:
         html = requests.get(url).text
     except Exception as e:
@@ -69,13 +71,9 @@ while parse:
             session = Session()
 
             for row_idx in range(sheet.nrows):
-                date: str = '01.01.1978'
                 row_data = sheet.row_values(row_idx)
                 if re.match(r'Дата торгов: \d{2}\.\d{2}\.\d{4}', row_data[1]):
-                    date = row_data[1][13:]
-                    year = int(date[6:10])
-                    month = int(date[3:5])
-                    day = int(date[0:2])
+                    year, month, day = string_to_date(row_data[1][13:])
                     if year == 2022:
                         break
                 if row_data[1] in SKIP_WORDS:
